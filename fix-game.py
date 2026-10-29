@@ -56,6 +56,49 @@ document.addEventListener("visibilitychange", () => {
 '''
 html = html[:anti_start] + anti_cheat + html[anti_end + len("// ===================== ADMIN ====================="):]
  
+
+# Rendre les énigmes moins guidées : ne pas donner le nom exact du commentaire/source à chercher.
+html = html.replace(
+    'Cherche un commentaire HTML contenant <code>INDICE_NIVEAU_4</code>.<br>Quel est le <strong>code secret</strong> mentionné ?',
+    'Explore les traces laissées par le créateur dans cette page et retrouve le <strong>code secret</strong>.'
+)
+
+# Habillage motivant, façon jeu éducatif : micro-animations, progression et encouragements.
+style_patch = r"""
+<style id="quest-motivation-style">
+:root{--quest-violet:#7657ff;--quest-lime:#b7f34a;--quest-ink:#17223b}
+button,.btn{transition:transform .16s ease,filter .16s ease,box-shadow .16s ease}
+button:hover,.btn:hover{transform:translateY(-2px);filter:brightness(1.05);box-shadow:0 8px 22px #7657ff30}
+button:active,.btn:active{transform:scale(.97)}
+.quest-cheer{position:fixed;z-index:99999;left:50%;top:16px;transform:translate(-50%,-18px);opacity:0;pointer-events:none;background:#17223b;color:white;border:2px solid #b7f34a;border-radius:22px;padding:13px 20px;font-weight:800;box-shadow:0 12px 35px #11182735;max-width:90vw;text-align:center;transition:opacity .25s,transform .25s}
+.quest-cheer.show{opacity:1;transform:translate(-50%,0)}
+.quest-confetti{position:fixed;z-index:99998;top:-20px;width:9px;height:14px;border-radius:3px;pointer-events:none;animation:questFall 1.8s ease-in forwards}
+@keyframes questFall{to{transform:translateY(110vh) rotate(720deg);opacity:.15}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+"""
+if "quest-motivation-style" not in html:
+    html = html.replace("</head>", style_patch + "\\n</head>", 1)
+
+motivation_script = r"""
+<script id="quest-motivation-script">
+(function(){
+  if(window.__questMotivationLoaded)return;window.__questMotivationLoaded=true;
+  const cheer=document.createElement('div');cheer.className='quest-cheer';cheer.setAttribute('role','status');cheer.setAttribute('aria-live','polite');document.body.appendChild(cheer);
+  let last='';let hideTimer;
+  function celebrate(message){
+    if(!message||message===last)return;last=message;cheer.textContent=message;cheer.classList.add('show');clearTimeout(hideTimer);hideTimer=setTimeout(()=>cheer.classList.remove('show'),2300);
+    for(let i=0;i<18;i++){const p=document.createElement('i');p.className='quest-confetti';p.style.left=(Math.random()*100)+'vw';p.style.background=['#7657ff','#b7f34a','#ffca55','#ff6b9a','#45d7f2'][i%5];p.style.animationDelay=(Math.random()*.35)+'s';document.body.appendChild(p);setTimeout(()=>p.remove(),2300)}
+  }
+  const success=/bonne réponse|bravo|correct|félicitations|bien joué|excellent|énigme résolue|niveau terminé|trésor trouvé/i;
+  const observer=new MutationObserver(records=>{for(const r of records){for(const n of r.addedNodes){if(n.nodeType!==1)continue;const t=(n.innerText||n.textContent||'').trim();if(t.length<100&&success.test(t)){celebrate(['🌟 Super, tu avances !','🔥 Excellent travail !','🧠 Esprit de détective !','🎉 Bravo, continue !'][Math.floor(Math.random()*4)]);return}}}});
+  observer.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+"""
+if "quest-motivation-script" not in html:
+    html = html.replace("</body>", motivation_script + "\\n</body>", 1)
+
 html_path.write_text(html, encoding="utf-8")
 
 match = re.search(r"<script[^>]*>(.*?)</script>", html, re.S)
