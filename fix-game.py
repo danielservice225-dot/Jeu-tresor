@@ -52,10 +52,7 @@ function registerCheatAttempt(reason) {
 document.addEventListener("visibilitychange", () => {
   if (state.started && document.hidden) registerCheatAttempt("onglet quitté ou application masquée");
 });
-window.addEventListener("blur", () => {
-  if (state.started) registerCheatAttempt("fenêtre du jeu quittée");
-});
-// ===================== ADMIN =====================
+// Sur mobile, window.blur peut se déclencher à l’ouverture du clavier virtuel.\n// On évite ce faux positif qui empêchait la saisie et le démarrage dans Chrome.\n// ===================== ADMIN =====================
 '''
 html = html[:anti_start] + anti_cheat + html[anti_end + len("// ===================== ADMIN ====================="):]
  
