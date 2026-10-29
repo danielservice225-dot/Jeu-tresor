@@ -28,6 +28,37 @@ for old, new in fixes:
     else:
         html = html.replace(old, new)
 
+# Renforcer l'anti-triche : le premier départ de l'onglet entraîne GAME OVER.
+anti_start = html.find("// ===================== ANTI-CHEAT =====================")
+anti_end = html.find("// ===================== ADMIN =====================", anti_start)
+if anti_start < 0 or anti_end < 0:
+    raise SystemExit("ERREUR : bloc anti-triche introuvable ; déploiement annulé.")
+anti_cheat = r'''// ===================== ANTI-CHEAT =====================
+let cheatHandled = false;
+function registerCheatAttempt(reason) {
+  if (!state.started || state.cheated || cheatHandled) return;
+  cheatHandled = true;
+  state.cheated = true;
+  clearInterval(state.timerInterval);
+  savePlayer({ status: "cheater", score: state.score, level: state.level + 1, alert: reason, alertTime: new Date().toISOString() });
+  document.getElementById("goMessage").innerHTML =
+    "🚨 <strong>" + (state.player || "Joueur") + "</strong>, sortie détectée (" + reason + ").<br><br>" +
+    "<strong>GAME OVER</strong> : ta partie est interrompue. Tu dois recommencer depuis le début.";
+  state.started = false;
+  showScreen("gameover");
+  document.getElementById("cheatOverlay").classList.add("show");
+  playSound("error");
+}
+document.addEventListener("visibilitychange", () => {
+  if (state.started && document.hidden) registerCheatAttempt("onglet quitté ou application masquée");
+});
+window.addEventListener("blur", () => {
+  if (state.started) registerCheatAttempt("fenêtre du jeu quittée");
+});
+// ===================== ADMIN =====================
+'''
+html = html[:anti_start] + anti_cheat + html[anti_end + len("// ===================== ADMIN ====================="):]
+ 
 html_path.write_text(html, encoding="utf-8")
 
 match = re.search(r"<script[^>]*>(.*?)</script>", html, re.S)
