@@ -78,7 +78,7 @@ button:active,.btn:active{transform:scale(.97)}
 </style>
 """
 if "quest-motivation-style" not in html:
-    html = html.replace("</head>", style_patch + "\\n</head>", 1)
+    html = html.replace("</head>", style_patch + "\n</head>", 1)
 
 motivation_script = r"""
 <script id="quest-motivation-script">
@@ -97,7 +97,7 @@ motivation_script = r"""
 </script>
 """
 if "quest-motivation-script" not in html:
-    html = html.replace("</body>", motivation_script + "\\n</body>", 1)
+    html = html.replace("</body>", motivation_script + "\n</body>", 1)
 
 html_path.write_text(html, encoding="utf-8")
 
